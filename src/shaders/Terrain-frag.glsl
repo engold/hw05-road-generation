@@ -9,7 +9,8 @@ in vec2 fs_Pos;
 out vec4 out_Col;
 
 float random (in vec2 st) {
-    return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
+    return fract(sin(dot(st.xy,
+                         vec2(12.9898,78.233))) * 43758.5453123);
 }
 
 
@@ -48,23 +49,35 @@ float fbm (in vec2 st) {
     return total;
 }
 
-
-vec3 waterFunc(vec2 pos) {
+float waterFunc(vec2 pos) {
 	vec2 elevationPos = pos - vec2(1.1, 0.3);
 	float noiseVal = fbm(elevationPos / 2.0);
 	noiseVal = clamp((noiseVal - 0.4) / 0.4, 0.0, 1.0);
   if(noiseVal == 0.0){
-    return vec3(0.1098, 0.4941, 1.0); // water color
+    return 1.0; // 1 means yes water
   }
   else{
-    return  vec3(0.2627, 0.9686, 0.3216); // land color
+    return 0.0; // 0 means no water
   }
 
 }
 
+vec3 elevFunc(vec2 pos) {
+	float water = waterFunc(pos);
+	vec2 elevationPos = pos - vec2(1.15, 0.4);
+	float noise = fbm(elevationPos / 2.02);
+	noise = clamp((noise - 0.2), 0.0, 1.0);
+  if(water == 1.0){
+    return   vec3(0.1098, 0.4941, 1.0);
+  }
+  else{
+    return vec3(0, (noise* 1.25* u_Time), 0) * vec3(0.2627, 0.9686, 0.3216);
+  }
+
+}
 
 void main() {
 vec2 x = fs_Pos;
-vec3 color = waterFunc(x);
-	out_Col = vec4(color, 1.0);
+vec3 color =  elevFunc(x);
+out_Col = vec4(color, 1.0);
 }
